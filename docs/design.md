@@ -169,7 +169,7 @@ Based on Design Thinking research (IDEO), Miro AI findings, and Board of Innovat
 
 ### Report Structure
 
-````markdown
+```markdown
 # Spark Report: [Topic]
 
 > 3 Personas | 1 Round | 2026-02-21
@@ -222,7 +222,7 @@ mindmap
 1. [Action for top idea 1]
 2. [Action for top idea 2]
 3. [Action for top idea 3]
-````
+```
 
 ### Why This Structure
 
