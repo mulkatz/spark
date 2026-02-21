@@ -24,6 +24,23 @@
       "repository": "https://github.com/mulkatz/spark",
       "license": "MIT",
       "keywords": ["ideation", "brainstorming", "personas", "creativity", "innovation"]
+    },
+    {
+      "name": "anvil",
+      "source": {
+        "source": "github",
+        "repo": "mulkatz/anvil"
+      },
+      "description": "Adversarial thinking through structured debates. Stress-test ideas by rotating through Advocate, Critic, and Synthesizer phases with configurable debate modes.",
+      "version": "2.0.0",
+      "author": {
+        "name": "Franz",
+        "email": "franz@franz.cx"
+      },
+      "homepage": "https://github.com/mulkatz/anvil",
+      "repository": "https://github.com/mulkatz/anvil",
+      "license": "MIT",
+      "keywords": ["adversarial", "debate", "thinking", "analysis", "decision-making"]
     }
   ]
 }
