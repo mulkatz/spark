@@ -1,0 +1,9 @@
+{
+  "name": "spark",
+  "version": "0.1.0",
+  "description": "Collaborative ideation through multi-persona brainstorming. Generate surprising ideas by rotating AI personas through Seed, Cross-Pollinate, and Synthesize phases.",
+  "author": {
+    "name": "Franz",
+    "email": "franz@franz.cx"
+  }
+}
