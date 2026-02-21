@@ -22,7 +22,7 @@ The name: a spark is what ignites new thinking.
 In Claude Code, run:
 
 ```
-/plugin marketplace add mulkatz/spark
+/plugin marketplace add mulkatz/claude-plugins
 /plugin install spark@mulkatz
 ```
 
