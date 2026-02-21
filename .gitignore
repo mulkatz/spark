@@ -1,0 +1,23 @@
+# Dependencies
+node_modules
+
+# OS
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Build artifacts
+*.tgz
+bun.lock
+
+# Spark runtime state (generated during ideation sessions)
+.claude/spark-state.local.md
+.claude/spark-result.local.md
