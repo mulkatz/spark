@@ -1,6 +1,6 @@
 {
   "name": "spark",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Collaborative ideation plugin for Claude Code — generate ideas through multi-perspective brainstorming",
   "private": true,
   "scripts": {
