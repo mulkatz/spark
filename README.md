@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" alt="Spark" width="128" height="128">
+</p>
+
 <h1 align="center">Spark</h1>
 
 <p align="center">Collaborative ideation plugin for <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a>. Generate surprising ideas through multi-persona brainstorming.</p>
