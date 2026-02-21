@@ -10,7 +10,10 @@
   "plugins": [
     {
       "name": "spark",
-      "source": "./",
+      "source": {
+        "source": "github",
+        "repo": "mulkatz/spark"
+      },
       "description": "Collaborative ideation through multi-persona brainstorming. Generate surprising ideas by rotating AI personas through Seed, Cross-Pollinate, and Synthesize phases.",
       "version": "0.1.0",
       "author": {
