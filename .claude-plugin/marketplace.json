@@ -1,0 +1,26 @@
+{
+  "name": "mulkatz",
+  "owner": {
+    "name": "Franz",
+    "email": "franz@franz.cx"
+  },
+  "metadata": {
+    "description": "Franz's Claude Code plugins"
+  },
+  "plugins": [
+    {
+      "name": "spark",
+      "source": "./",
+      "description": "Collaborative ideation through multi-persona brainstorming. Generate surprising ideas by rotating AI personas through Seed, Cross-Pollinate, and Synthesize phases.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Franz",
+        "email": "franz@franz.cx"
+      },
+      "homepage": "https://github.com/mulkatz/spark",
+      "repository": "https://github.com/mulkatz/spark",
+      "license": "MIT",
+      "keywords": ["ideation", "brainstorming", "personas", "creativity", "innovation"]
+    }
+  ]
+}

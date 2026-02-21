@@ -7,6 +7,7 @@
 <p align="center">Collaborative ideation plugin for <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a>. Generate surprising ideas through multi-persona brainstorming.</p>
 
 <p align="center">
+  <a href="https://github.com/mulkatz/spark/releases"><img src="https://img.shields.io/github/v/release/mulkatz/spark?style=flat-square" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/mulkatz/spark?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/Claude_Code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin">
   <img src="https://img.shields.io/badge/no_build-shell_%2B_markdown-green?style=flat-square" alt="No Build Step">
@@ -16,7 +17,25 @@ Spark is an **ideation tool** that generates diverse, non-obvious ideas by rotat
 
 The name: a spark is what ignites new thinking.
 
-> **Status:** In development. Design is research-backed — see [Design Document](docs/design.md) for the full rationale.
+## Installation
+
+In Claude Code, run:
+
+```
+/plugin marketplace add mulkatz/spark
+/plugin install spark@mulkatz
+```
+
+That's it. No cloning needed. Auto-updates are supported via `/plugin marketplace update mulkatz`.
+
+### Local development
+
+For local development or testing, use `--plugin-dir`:
+
+```bash
+git clone https://github.com/mulkatz/spark.git
+claude --plugin-dir ./spark
+```
 
 ## How It Works
 
