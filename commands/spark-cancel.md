@@ -1,6 +1,11 @@
 ---
 description: "Cancel an active Spark ideation session"
-allowed-tools: ["Bash(test -f .claude/spark-state.local.md:*)", "Bash(rm .claude/spark-state.local.md)", "Read(.claude/spark-state.local.md)"]
+allowed-tools:
+  [
+    "Bash(test -f .claude/spark-state.local.md:*)",
+    "Bash(rm .claude/spark-state.local.md)",
+    "Read(.claude/spark-state.local.md)",
+  ]
 hide-from-slash-command-tool: "true"
 ---
 

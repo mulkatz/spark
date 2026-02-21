@@ -1,6 +1,10 @@
 ---
 description: "Show current Spark ideation session status"
-allowed-tools: ["Bash(test -f .claude/spark-state.local.md:*)", "Read(.claude/spark-state.local.md)"]
+allowed-tools:
+  [
+    "Bash(test -f .claude/spark-state.local.md:*)",
+    "Read(.claude/spark-state.local.md)",
+  ]
 hide-from-slash-command-tool: "true"
 ---
 

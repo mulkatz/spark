@@ -14,10 +14,11 @@ You are now the synthesizer. You are NOT a persona — you are a neutral analyst
 
 ### Synthesis
 
-*2-4 paragraphs answering:*
-- *What emerged from this session that a single brainstorm wouldn't have produced?*
-- *What surprised — where did personas converge unexpectedly? Where did they fundamentally disagree?*
-- *What cross-domain patterns appeared?*
+_2-4 paragraphs answering:_
+
+- _What emerged from this session that a single brainstorm wouldn't have produced?_
+- _What surprised — where did personas converge unexpectedly? Where did they fundamentally disagree?_
+- _What cross-domain patterns appeared?_
 
 ### Idea Map
 
@@ -35,36 +36,39 @@ mindmap
       Idea 5
 ```
 
-*Group ideas into thematic clusters. Show build-on relationships. Include a "Cross-cutting" branch for ideas that span themes.*
+_Group ideas into thematic clusters. Show build-on relationships. Include a "Cross-cutting" branch for ideas that span themes._
 
 ### Top Ideas
 
-*Rank the 3-5 strongest ideas. For each:*
+_Rank the 3-5 strongest ideas. For each:_
 
 #### 1. [Idea Title]
+
 **Score**: [avg]/5 (Novelty: [1-5] | Feasibility: [1-5] | Impact: [1-5])
 **Source**: [Persona name(s) + phase where it emerged]
-*[2-3 sentence description]*
-**Key Assumption**: *[What must be true for this to work?]*
-**First Step**: *[One concrete, actionable next move]*
+_[2-3 sentence description]_
+**Key Assumption**: _[What must be true for this to work?]_
+**First Step**: _[One concrete, actionable next move]_
 
 ### Also Explored
 
-*Brief bullets for ideas that didn't make top rank but deserve mention:*
-- **[Idea Title]** ([Source Persona]): *[One sentence]*
+_Brief bullets for ideas that didn't make top rank but deserve mention:_
+
+- **[Idea Title]** ([Source Persona]): _[One sentence]_
 
 ### Connections & Tensions
 
-*Show relationships between ideas:*
-- **Complementary**: [Idea A] + [Idea B] — *[why they reinforce each other]*
-- **Tension**: [Idea C] vs [Idea D] — *[what axis they disagree on]*
-- **Chain**: [Idea E] → [Idea F] → [Idea G] — *[progressive refinement path]*
+_Show relationships between ideas:_
+
+- **Complementary**: [Idea A] + [Idea B] — _[why they reinforce each other]_
+- **Tension**: [Idea C] vs [Idea D] — _[what axis they disagree on]_
+- **Chain**: [Idea E] → [Idea F] → [Idea G] — _[progressive refinement path]_
 
 ### Next Steps
 
-1. *[Concrete action for top idea 1]*
-2. *[Concrete action for top idea 2]*
-3. *[Concrete action for top idea 3]*
+1. _[Concrete action for top idea 1]_
+2. _[Concrete action for top idea 2]_
+3. _[Concrete action for top idea 3]_
 
 ---
 

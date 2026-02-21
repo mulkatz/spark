@@ -29,17 +29,19 @@ Use these as thinking tools — you don't need all of them, but try at least 2-3
 ## Output Format
 
 ### What Surprised Me
-*2-3 sentences: Which idea from another persona caught you off guard? Why? What does it make you think of?*
+
+_2-3 sentences: Which idea from another persona caught you off guard? Why? What does it make you think of?_
 
 ### Cross-Pollinated Ideas
 
 For each idea:
-**[Idea Title]** *(SCAMPER operation: [which one])*
-*Building on [Persona]'s "[Original Idea Title]"...*
-*[2-3 sentence description of the transformed idea. What changed? What's new?]*
+**[Idea Title]** _(SCAMPER operation: [which one])_
+_Building on [Persona]'s "[Original Idea Title]"..._
+_[2-3 sentence description of the transformed idea. What changed? What's new?]_
 
 ### Tension I Notice
-*1-2 sentences: Where do the personas fundamentally disagree? What productive tension exists between the different worldviews?*
+
+_1-2 sentences: Where do the personas fundamentally disagree? What productive tension exists between the different worldviews?_
 
 ---
 

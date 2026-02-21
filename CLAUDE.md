@@ -24,14 +24,17 @@ A Claude Code plugin that enables collaborative ideation through multi-persona b
 ## Core Design Decisions
 
 ### Personas, not roles
+
 Abstract labels collapse into generic consultant tone ("persona collapse"). Every persona must have: a specific worldview, domain vocabulary, thinking style, and **explicit blind spots**. See `docs/design.md` for research backing.
 
 ### Separate → Together → Synthesize
+
 1. **SEED**: Each persona generates ideas independently (prevents premature convergence)
 2. **CROSS-POLLINATE**: Personas see each other's output, build/combine/transform using SCAMPER
 3. **SYNTHESIZE**: Pattern recognition, clustering, ranking, idea map
 
 ### Anti-convergence mechanisms
+
 - Independent generation before collaboration
 - Temperature differentiation per persona (0.3–0.8)
 - Random constraint injection in SEED phase
@@ -39,6 +42,7 @@ Abstract labels collapse into generic consultant tone ("persona collapse"). Ever
 - "Focus on what SURPRISES you" prompt instruction
 
 ### State machine
+
 ```
 seed_p1 → seed_p2 → seed_p3 →
 cross_p1 → cross_p2 → cross_p3 →
@@ -71,8 +75,8 @@ Every change to `setup-spark.sh` or `stop-hook.sh` MUST include corresponding te
 
 Tests mirror the source scripts:
 
-| Source | Test directory | What it covers |
-|---|---|---|
-| `scripts/setup-spark.sh` | `tests/setup-spark/` | Arg parsing, validation, state file creation, persona selection, context injection |
-| `hooks/stop-hook.sh` | `tests/stop-hook/` | Entry conditions, state transitions, prompt construction, persona prompts, interactive mode, synthesis |
-| Both combined | `tests/integration/` | End-to-end ideation cycles, shellcheck |
+| Source                   | Test directory       | What it covers                                                                                         |
+| ------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `scripts/setup-spark.sh` | `tests/setup-spark/` | Arg parsing, validation, state file creation, persona selection, context injection                     |
+| `hooks/stop-hook.sh`     | `tests/stop-hook/`   | Entry conditions, state transitions, prompt construction, persona prompts, interactive mode, synthesis |
+| Both combined            | `tests/integration/` | End-to-end ideation cycles, shellcheck                                                                 |

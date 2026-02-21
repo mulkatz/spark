@@ -23,16 +23,18 @@ Use this constraint as creative fuel. Don't fight it — let it push your thinki
 ## Output Format
 
 ### My Perspective
-*2-3 sentences: What does this topic look like through your eyes? What's the first thing you notice that others might miss?*
+
+_2-3 sentences: What does this topic look like through your eyes? What's the first thing you notice that others might miss?_
 
 ### Ideas
 
 For each idea:
 **[Idea Title]**
-*[2-3 sentence description. What is it? How would it work? Why does it matter?]*
+_[2-3 sentence description. What is it? How would it work? Why does it matter?]_
 
 ### Connecting Pattern
-*1-2 sentences: What thread connects your ideas? What underlying principle or worldview ties them together?*
+
+_1-2 sentences: What thread connects your ideas? What underlying principle or worldview ties them together?_
 
 ---
 

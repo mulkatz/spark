@@ -9,6 +9,7 @@ Accepted
 Spark needs to rotate Claude through multiple personas across three phases (Seed, Cross-Pollinate, Synthesize). The key challenge: Claude normally controls its own conversation flow, but we need to inject different persona instructions at specific transitions.
 
 Options considered:
+
 1. **Stop hook pattern** — intercept Claude's exit, inject next prompt, force continuation
 2. **Single prompt with all instructions** — describe the full rotation in one system prompt
 3. **Multiple commands** — user manually runs `/spark-seed-1`, `/spark-seed-2`, etc.

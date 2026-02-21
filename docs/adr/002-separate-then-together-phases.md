@@ -9,6 +9,7 @@ Accepted
 How should multiple AI personas collaborate during ideation? The phase structure determines idea diversity, quality, and whether the system actually outperforms single-agent brainstorming.
 
 Options considered:
+
 1. **Simultaneous collaboration** — All personas brainstorm together from the start
 2. **Sequential building** — Each persona sees and builds on the previous persona's output
 3. **Separate-then-together** — Independent generation first, then cross-pollination, then synthesis

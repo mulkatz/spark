@@ -19,6 +19,7 @@ Abstract role labels ("the creative thinker", "the practical thinker") **collaps
 Rich creative worldview personas with encoded philosophies, specific vocabularies, and **explicit limitations** produce dramatically better diversity: 3.14 → 7.90 on a 10-point diversity scale, closing 82% of the gap to human expert diversity.
 
 **What makes a good persona prompt:**
+
 - A specific worldview and philosophy
 - Domain-specific vocabulary and mental models
 - Thinking style (how they approach problems)
@@ -26,6 +27,7 @@ Rich creative worldview personas with encoded philosophies, specific vocabularie
 - Constraints that force non-obvious connections
 
 **Example** for "How can remote work be more creative?":
+
 - **Theater Director** — thinks in scenes, tension, improvisation, audience reaction
 - **Urban Planner** — thinks in spaces, flows, nodes, chance encounters
 - **Neuroscientist** — thinks in dopamine, flow states, cognitive load, attention cycles
@@ -64,17 +66,17 @@ Phase 3: SYNTHESIZE (Convergent — meta-perspective)
 ### Why This Structure
 
 1. **Independent SEED phase** prevents the #1 failure mode: premature convergence. When agents think together from the start, the first plausible idea wins (majority dynamics).
-2. **CROSS-POLLINATE with SCAMPER** — the IBIS paper (ACM 2025) shows: an agent that explicitly *transforms* existing ideas (Substitute, Combine, Adapt, Modify, Reverse) generates significantly more surprising combinations than pure "build on this".
+2. **CROSS-POLLINATE with SCAMPER** — the IBIS paper (ACM 2025) shows: an agent that explicitly _transforms_ existing ideas (Substitute, Combine, Adapt, Modify, Reverse) generates significantly more surprising combinations than pure "build on this".
 3. **3 personas is optimal** — SIGDIAL 2025 confirms: diminishing returns beyond 3 parallel perspectives.
 
 ### Anti-Convergence Mechanisms
 
-| Mechanism | Source | Effect |
-|---|---|---|
-| Independent generation before collaboration | Straub et al. | Preserves diverse starting points |
-| Random constraint injection in SEED phase | Oblique Strategies / Synectics | Breaks fixation, forces unexpected angles |
-| "Focus on what SURPRISES you" instruction | The Spark Effect | Counters agents being too agreeable |
-| SCAMPER transformations in CROSS-POLLINATE | IBIS System (ACM 2025) | Systematic idea mutation vs. generation from scratch |
+| Mechanism                                   | Source                         | Effect                                               |
+| ------------------------------------------- | ------------------------------ | ---------------------------------------------------- |
+| Independent generation before collaboration | Straub et al.                  | Preserves diverse starting points                    |
+| Random constraint injection in SEED phase   | Oblique Strategies / Synectics | Breaks fixation, forces unexpected angles            |
+| "Focus on what SURPRISES you" instruction   | The Spark Effect               | Counters agents being too agreeable                  |
+| SCAMPER transformations in CROSS-POLLINATE  | IBIS System (ACM 2025)         | Systematic idea mutation vs. generation from scratch |
 
 ---
 
@@ -135,11 +137,11 @@ Research is surprisingly clear: **interruptions during divergent phases hurt cre
 
 ### Three Levels
 
-| Mode | Flag | Behavior |
-|---|---|---|
-| **Autonomous** | (default) | Runs to completion, result at the end |
-| **Checkpoint** | `--interactive` | Pauses only before synthesis — user can steer direction or inject ideas |
-| **Full** | `--interactive=full` | Pauses after every phase — power-user mode |
+| Mode           | Flag                 | Behavior                                                                |
+| -------------- | -------------------- | ----------------------------------------------------------------------- |
+| **Autonomous** | (default)            | Runs to completion, result at the end                                   |
+| **Checkpoint** | `--interactive`      | Pauses only before synthesis — user can steer direction or inject ideas |
+| **Full**       | `--interactive=full` | Pauses after every phase — power-user mode                              |
 
 ### Checkpoint Design: Inject, Don't Ask
 
@@ -167,16 +169,19 @@ Based on Design Thinking research (IDEO), Miro AI findings, and Board of Innovat
 
 ### Report Structure
 
-```markdown
+````markdown
 # Spark Report: [Topic]
+
 > 3 Personas | 1 Round | 2026-02-21
 
 ## Synthesis
+
 [2-4 paragraphs: What emerged? What surprised? Where did personas
 converge vs. diverge? — Most-read section per research]
 
 ## Idea Map
-​```mermaid
+
+​`mermaid
 mindmap
   root((Topic))
     Theme A
@@ -188,11 +193,12 @@ mindmap
       Idea 4
     Cross-cutting
       Idea 5
-​```
+​`
 
 ## Top Ideas
 
 ### 1. [Idea Title]
+
 **Score**: 4.3/5 (Novelty: 5 | Feasibility: 3 | Impact: 5)
 [2-3 sentence description]
 **Key Assumption**: [What must be true for this to work]
@@ -201,19 +207,22 @@ mindmap
 ### 2. ...
 
 ## Also Explored
+
 - **Idea N**: Brief description
 - **Idea N+1**: Brief description
 
 ## Connections & Tensions
+
 - **Complementary**: Idea 1 + Idea 3 — [reason]
 - **Tension**: Idea 2 vs Idea 5 — [axis]
 - **Chain**: Idea 6 → Idea 4 → Idea 1 (progressive refinement)
 
 ## Next Steps
+
 1. [Action for top idea 1]
 2. [Action for top idea 2]
 3. [Action for top idea 3]
-```
+````
 
 ### Why This Structure
 
@@ -226,11 +235,11 @@ mindmap
 
 ### Scoring Dimensions
 
-| Dimension | What it measures |
-|---|---|
-| **Novelty** | How unusual, unexpected, differentiated? |
-| **Feasibility** | Can it be built/executed with available resources? |
-| **Impact** | How much value for users, business, or stated goal? |
+| Dimension       | What it measures                                    |
+| --------------- | --------------------------------------------------- |
+| **Novelty**     | How unusual, unexpected, differentiated?            |
+| **Feasibility** | Can it be built/executed with available resources?  |
+| **Impact**      | How much value for users, business, or stated goal? |
 
 Each scored 1-5, composite = weighted average. Weights configurable (moonshot session → novelty higher; quick wins → feasibility higher).
 
@@ -272,21 +281,22 @@ Each scored 1-5, composite = weighted average. Weights configurable (moonshot se
 
 ### Parameters
 
-| Flag | Default | Description |
-|---|---|---|
-| `--personas` | auto-selected | Comma-separated persona names or custom definitions |
-| `--rounds` | `1` | Number of cross-pollination rounds |
-| `--interactive` | off | Pause before synthesis for user direction |
-| `--interactive=full` | off | Pause after every phase |
-| `--focus` | none | Lens to focus ideation through |
-| `--context` | none | File path for additional context |
-| `--output` | none | Export result to file (html/md) |
+| Flag                 | Default       | Description                                         |
+| -------------------- | ------------- | --------------------------------------------------- |
+| `--personas`         | auto-selected | Comma-separated persona names or custom definitions |
+| `--rounds`           | `1`           | Number of cross-pollination rounds                  |
+| `--interactive`      | off           | Pause before synthesis for user direction           |
+| `--interactive=full` | off           | Pause after every phase                             |
+| `--focus`            | none          | Lens to focus ideation through                      |
+| `--context`          | none          | File path for additional context                    |
+| `--output`           | none          | Export result to file (html/md)                     |
 
 ---
 
 ## Research Sources
 
 ### Multi-Agent Ideation Systems
+
 - [MultiColleagues: Towards AI as Colleagues](https://arxiv.org/abs/2510.23904) — Most complete multi-agent ideation system with quantitative results. Double Diamond validated.
 - [The Spark Effect: Engineering Creative Diversity](https://arxiv.org/html/2510.15568) — Best results on persona design (3.14→7.90 diversity). Rich personas with explicit constraints.
 - [Persona-based Multi-Agent Collaboration](https://arxiv.org/abs/2512.04488) — Separate/together comparison. Domain personas produce targeted distributions.
@@ -296,17 +306,20 @@ Each scored 1-5, composite = weighted average. Weights configurable (moonshot se
 - [Human Creativity in the Age of LLMs](https://dl.acm.org/doi/full/10.1145/3706598.3714198) — CHI 2025. Documents convergence problem.
 
 ### Interactive UX
+
 - [HAIExplore: Scaffolding Divergent and Convergent Thinking](https://arxiv.org/abs/2512.18388) — Premature convergence with human intervention.
 - [YES AND: Multi-Agent Framework for Ideation](https://dl.acm.org/doi/10.1145/3706599.3720142) — CHI 2025. On-demand interjection.
 - [Designing For Agentic AI: Practical UX Patterns](https://www.smashingmagazine.com/2026/02/designing-agentic-ai-practical-ux-patterns/) — Smashing Magazine, Feb 2026.
 - [Designing for Autonomy: UX Principles for Agentic AI](https://www.uxmatters.com/mt/archives/2025/12/designing-for-autonomy-ux-principles-for-agentic-ai.php) — UXmatters, Dec 2025.
 
 ### Output & Evaluation
+
 - [Board of Innovation Concept Card](https://www.boardofinnovation.com/tools/concept-card/) — Per-idea card template.
 - [Miro Idea Prioritization Card](https://miro.com/miroverse/idea-prioritization-card/) — Scoring template.
 - [Mermaid.js Mindmap Syntax](https://mermaid.js.org/syntax/mindmap.html) — CLI-friendly idea maps.
 
 ### Creative Frameworks
+
 - [AutoTRIZ: Artificial Ideation with TRIZ and LLMs](https://arxiv.org/abs/2403.13002) — TRIZ methodology automated.
 - [Oblique Strategies and AI Creativity](https://venturebeat.com/ai/how-brian-eno-anticipated-the-creative-dynamics-of-ai-by-decades) — Random constraint injection.
 - [Divergent and Convergent LLM Personas](https://arxiv.org/html/2510.26490) — Temperature-differentiated cognitive roles.

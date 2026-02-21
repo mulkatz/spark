@@ -52,15 +52,15 @@ Single-agent brainstorming produces **convergent, expected ideas** — asking fo
 /spark "question or topic" [options]
 ```
 
-| Option | Default | Description |
-|---|---|---|
-| `--personas` | auto-selected | Comma-separated persona names or custom definitions |
-| `--rounds` | `1` | Number of cross-pollination rounds (1-3) |
-| `--interactive` | off | Pause before synthesis for user steering |
-| `--interactive=full` | off | Pause after every phase |
-| `--focus` | — | Lens to focus ideation (e.g., `"business model"`, `"user experience"`) |
-| `--context` | — | File or directory for additional context |
-| `--output` | — | Export result to file (.html or .md) |
+| Option               | Default       | Description                                                            |
+| -------------------- | ------------- | ---------------------------------------------------------------------- |
+| `--personas`         | auto-selected | Comma-separated persona names or custom definitions                    |
+| `--rounds`           | `1`           | Number of cross-pollination rounds (1-3)                               |
+| `--interactive`      | off           | Pause before synthesis for user steering                               |
+| `--interactive=full` | off           | Pause after every phase                                                |
+| `--focus`            | —             | Lens to focus ideation (e.g., `"business model"`, `"user experience"`) |
+| `--context`          | —             | File or directory for additional context                               |
+| `--output`           | —             | Export result to file (.html or .md)                                   |
 
 ### Examples
 
@@ -88,17 +88,17 @@ Single-agent brainstorming produces **convergent, expected ideas** — asking fo
 
 Spark ships with 9 curated personas, each designed for maximum thinking diversity:
 
-| Persona | Thinking Axis | Key Question |
-|---|---|---|
-| `biomimicry-scientist` | Nature patterns | "How did evolution solve this?" |
-| `theater-director` | Narrative & tension | "Where's the dramatic moment?" |
-| `urban-planner` | Systems & flows | "What if we change the infrastructure?" |
-| `game-designer` | Mechanics & incentives | "What's the core loop?" |
-| `anthropologist` | Human behavior | "What do people actually do vs. say?" |
-| `scifi-author` | Extrapolation | "What if this were 100x bigger?" |
-| `jazz-musician` | Improvisation | "What happens if we play this differently?" |
-| `forensic-investigator` | Hidden connections | "What is everyone overlooking?" |
-| `architect` | Constraints & elegance | "What can we remove?" |
+| Persona                 | Thinking Axis          | Key Question                                |
+| ----------------------- | ---------------------- | ------------------------------------------- |
+| `biomimicry-scientist`  | Nature patterns        | "How did evolution solve this?"             |
+| `theater-director`      | Narrative & tension    | "Where's the dramatic moment?"              |
+| `urban-planner`         | Systems & flows        | "What if we change the infrastructure?"     |
+| `game-designer`         | Mechanics & incentives | "What's the core loop?"                     |
+| `anthropologist`        | Human behavior         | "What do people actually do vs. say?"       |
+| `scifi-author`          | Extrapolation          | "What if this were 100x bigger?"            |
+| `jazz-musician`         | Improvisation          | "What happens if we play this differently?" |
+| `forensic-investigator` | Hidden connections     | "What is everyone overlooking?"             |
+| `architect`             | Constraints & elegance | "What can we remove?"                       |
 
 Or define your own: `--personas "custom:A retired general who now runs a bakery"`
 
