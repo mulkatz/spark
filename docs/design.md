@@ -72,9 +72,7 @@ Phase 3: SYNTHESIZE (Convergent — meta-perspective)
 | Mechanism | Source | Effect |
 |---|---|---|
 | Independent generation before collaboration | Straub et al. | Preserves diverse starting points |
-| Temperature differentiation per persona (0.3–0.8) | Divergent/Convergent Personas paper | Creates natural variation in output style |
 | Random constraint injection in SEED phase | Oblique Strategies / Synectics | Breaks fixation, forces unexpected angles |
-| 20% randomization in persona ordering | MultiColleagues | Prevents predictable interaction patterns |
 | "Focus on what SURPRISES you" instruction | The Spark Effect | Counters agents being too agreeable |
 | SCAMPER transformations in CROSS-POLLINATE | IBIS System (ACM 2025) | Systematic idea mutation vs. generation from scratch |
 
@@ -98,20 +96,35 @@ Same mechanical pattern as Anvil (stop hook intercepts response, appends transcr
 ---
 active: true
 question: "How can remote work be more creative?"
-phase: seed_p1
+phase: seed
+persona_index: 0
 round: 1
 max_rounds: 1
 personas: "theater-director|urban-planner|neuroscientist"
-persona_index: 0
+constraints: "What if a child had to understand this?|What if it had to work in silence?|What if you could only remove something?"
 interactive: false
+interactive_level: ""
 focus: ""
 context_source: ""
-output: ""
+output: "~/Desktop/spark-2026-02-21-topic.html"
+started_at: "2026-02-21T10:00:00Z"
 ---
 
-## Transcript
+<!-- persona:theater-director -->
+[Persona description from preset file]
+<!-- /persona -->
 
-[Markdown transcript appended by stop hook]
+<!-- persona:urban-planner -->
+[Persona description from preset file]
+<!-- /persona -->
+
+## Seed: theater-director
+
+[Seed output appended by stop hook]
+
+## Cross-Pollination Round 1: theater-director
+
+[Cross output appended by stop hook]
 ```
 
 ---

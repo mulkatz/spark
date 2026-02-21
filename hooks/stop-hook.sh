@@ -57,10 +57,17 @@ PERSONA_INDEX=$(_fm persona_index)
 ROUND=$(_fm round)
 MAX_ROUNDS=$(_fm max_rounds)
 PERSONAS=$(_fmq personas)
+CONSTRAINTS=$(_fmq constraints)
 INTERACTIVE=$(_fm interactive)
 INTERACTIVE_LEVEL=$(_fmq interactive_level)
 FOCUS=$(_fmq focus)
 OUTPUT=$(_fmq output)
+
+# Parse constraints into array
+CONSTRAINT_LIST=()
+if [[ -n "$CONSTRAINTS" ]]; then
+  IFS='|' read -ra CONSTRAINT_LIST <<< "$CONSTRAINTS"
+fi
 
 # Parse persona names into array
 PERSONA_NAMES=()
@@ -205,7 +212,7 @@ case "$PHASE" in
     # Extract steering from the last output
     STEERING=""
     if printf '%s' "$LAST_OUTPUT" | grep -q '<spark-steering>'; then
-      STEERING=$(printf '%s' "$LAST_OUTPUT" | sed -n 's/.*<spark-steering>\(.*\)<\/spark-steering>.*/\1/p')
+      STEERING=$(printf '%s' "$LAST_OUTPUT" | sed -n 's/.*<spark-steering>\([^<]*\)<\/spark-steering>.*/\1/p')
     fi
 
     if [[ "$INTERACTIVE_LEVEL" == "full" ]] && [[ "$ROUND" -lt "$MAX_ROUNDS" ]]; then
@@ -289,8 +296,10 @@ mv "$TEMP_FILE" "$SPARK_STATE_FILE"
 
 # --- Construct Next Prompt ---
 
-# Extract the full transcript so far (everything after second ---)
-TRANSCRIPT_SO_FAR=$(awk '/^---$/{i++; next} i>=2' "$SPARK_STATE_FILE")
+# Extract ideation transcript (only ## Seed / ## Cross-Pollination sections, excluding persona descriptions and context)
+IDEATION_TRANSCRIPT=$(awk '/^## (Seed|Cross-Pollination)/{d=1} d{print}' "$SPARK_STATE_FILE")
+# Full body (for interactive checkpoint which needs context too)
+FULL_BODY=$(awk '/^---$/{i++; next} i>=2' "$SPARK_STATE_FILE")
 
 # Get persona description from state file
 get_persona_desc() {
@@ -322,9 +331,13 @@ After receiving the user's response, output exactly one of these tags at the END
 
 ## Session so far
 
-$TRANSCRIPT_SO_FAR"
+$FULL_BODY"
 
-  SYSTEM_MSG="Spark: INTERACTIVE CHECKPOINT — ideation complete, awaiting user steering"
+  if [[ "$INTERACTIVE_LEVEL" == "full" ]] && [[ "$ROUND" -lt "$MAX_ROUNDS" ]]; then
+    SYSTEM_MSG="Spark: INTERACTIVE CHECKPOINT — cross-pollination round $ROUND complete, awaiting user steering"
+  else
+    SYSTEM_MSG="Spark: INTERACTIVE CHECKPOINT — ideation complete, awaiting user steering"
+  fi
 
   jq -n \
     --arg prompt "$CHECKPOINT_PROMPT" \
@@ -356,35 +369,14 @@ if [[ -z "$NEXT_PERSONA_DESC" ]]; then
   NEXT_PERSONA_DESC="$NEXT_PERSONA_NAME"
 fi
 
-# Read the oblique strategy constraints for seed phases
+# Get constraint for a persona index (read from state file, selected at setup time with duplicate avoidance)
 get_constraint_for_index() {
   local idx="$1"
-  local constraints=(
-    "What if this had to work without any technology?"
-    "What if a child had to understand and use this?"
-    "What if this needed to work in complete silence?"
-    "What if the solution had to be beautiful, not just functional?"
-    "What if you could only solve this by removing something?"
-    "What if this had to work in reverse — starting from the end?"
-    "What if the most important user is someone who hates this?"
-    "What if this had to fit on a single piece of paper?"
-    "What if this needed to work across 100 years?"
-    "What if the solution had to make people laugh?"
-    "What if this had to work with zero budget?"
-    "What if you could only use materials found in nature?"
-    "What if the first version had to be built in one day?"
-    "What if this had to work for exactly one person, perfectly?"
-    "What if the solution had to be invisible?"
-    "What if this needed to create a ritual or habit?"
-    "What if the opposite of the obvious approach is better?"
-    "What if this had to work during a power outage?"
-  )
-  local constraint_count=${#constraints[@]}
-  # Use a deterministic-ish selection based on index + question hash
-  local hash
-  hash=$(printf '%s-%s' "$QUESTION" "$idx" | cksum | cut -d' ' -f1)
-  local ci=$((hash % constraint_count))
-  echo "${constraints[$ci]}"
+  if [[ "$idx" -lt "${#CONSTRAINT_LIST[@]}" ]]; then
+    echo "${CONSTRAINT_LIST[$idx]}"
+  else
+    echo "What if the obvious approach is completely wrong?"
+  fi
 }
 
 if [[ "$NEXT_PHASE" == "seed" ]]; then
@@ -442,7 +434,7 @@ Channel your cross-pollination through this lens. How does **$FOCUS** influence 
 
 ## Ideas from all personas
 
-$TRANSCRIPT_SO_FAR
+$IDEATION_TRANSCRIPT
 
 ---
 
@@ -473,7 +465,7 @@ $STEERING_BLOCK"
 
 ## Full session transcript
 
-$TRANSCRIPT_SO_FAR
+$IDEATION_TRANSCRIPT
 
 ---
 

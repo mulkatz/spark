@@ -20,6 +20,7 @@ create_state_file() {
   local focus=""
   local context_source=""
   local output=""
+  local constraints=""
   local started_at="2026-01-01T00:00:00Z"
   local body=""
 
@@ -38,6 +39,7 @@ create_state_file() {
       focus=*) focus="${arg#focus=}" ;;
       context_source=*) context_source="${arg#context_source=}" ;;
       output=*) output="${arg#output=}" ;;
+      constraints=*) constraints="${arg#constraints=}" ;;
       started_at=*) started_at="${arg#started_at=}" ;;
       body=*) body="${arg#body=}" ;;
     esac
@@ -54,10 +56,11 @@ create_state_file() {
     printf '%s' "$s"
   }
 
-  local esc_question esc_focus esc_personas esc_context_source esc_output
+  local esc_question esc_focus esc_personas esc_constraints esc_context_source esc_output
   esc_question="\"$(_test_yaml_escape "$question")\""
   esc_focus=$(_test_yaml_escape "$focus")
   esc_personas=$(_test_yaml_escape "$personas")
+  esc_constraints=$(_test_yaml_escape "$constraints")
   esc_context_source=$(_test_yaml_escape "$context_source")
   esc_output=$(_test_yaml_escape "$output")
 
@@ -73,6 +76,7 @@ persona_index: $persona_index
 round: $round
 max_rounds: $max_rounds
 personas: "$esc_personas"
+constraints: "$esc_constraints"
 interactive: $interactive
 interactive_level: "$interactive_level"
 focus: "$esc_focus"

@@ -166,6 +166,10 @@ done
 
 # Auto-select 3 personas if none specified
 if [[ "$PERSONA_COUNT" -eq 0 ]]; then
+  if [[ ${#AVAILABLE_PERSONAS[@]} -lt 3 ]]; then
+    echo "Error: At least 3 persona files are required in prompts/personas/ (found: ${#AVAILABLE_PERSONAS[@]})" >&2
+    exit 1
+  fi
   # Portable random shuffle: awk with srand + sort + head
   SELECTED=$(printf '%s\n' "${AVAILABLE_PERSONAS[@]}" | awk 'BEGIN{srand()}{print rand()"\t"$0}' | sort -n | cut -f2 | head -3)
   while IFS= read -r p; do
@@ -346,6 +350,9 @@ if [[ -z "$OUTPUT" ]]; then
 fi
 
 # Create state file
+# Build constraints YAML value (pipe-separated)
+CONSTRAINTS_YAML=$(IFS='|'; echo "${SELECTED_CONSTRAINTS[*]}")
+
 cat > "$SPARK_STATE_FILE" <<EOF
 ---
 active: true
@@ -355,6 +362,7 @@ persona_index: 0
 round: 1
 max_rounds: $ROUNDS
 personas: "$(yaml_escape "$PERSONAS_YAML")"
+constraints: "$(yaml_escape "$CONSTRAINTS_YAML")"
 interactive: $INTERACTIVE
 interactive_level: "$(yaml_escape "$INTERACTIVE_LEVEL")"
 focus: "$(yaml_escape "$FOCUS")"
