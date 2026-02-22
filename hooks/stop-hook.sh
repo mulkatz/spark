@@ -248,6 +248,7 @@ case "$PHASE" in
       printf '%s\n' "$meta"
 
       printf '\n---\n\n'
+      printf '## Synthesis\n\n'
       printf '%s\n' "$LAST_OUTPUT"
 
       if [[ -n "$SESSION_RECORD" ]]; then
