@@ -37,7 +37,7 @@ assert_reason_contains() {
   local expected="$1"
   local reason
   reason=$(printf '%s' "$output" | jq -r '.reason' 2>/dev/null)
-  if ! printf '%s' "$reason" | grep -qF "$expected"; then
+  if ! printf '%s' "$reason" | grep -qF -- "$expected"; then
     echo "Expected reason to contain: '$expected'" >&2
     echo "Actual reason: '$reason'" >&2
     return 1
@@ -50,7 +50,7 @@ assert_system_message_contains() {
   local expected="$1"
   local msg
   msg=$(printf '%s' "$output" | jq -r '.systemMessage' 2>/dev/null)
-  if ! printf '%s' "$msg" | grep -qF "$expected"; then
+  if ! printf '%s' "$msg" | grep -qF -- "$expected"; then
     echo "Expected systemMessage to contain: '$expected'" >&2
     echo "Actual systemMessage: '$msg'" >&2
     return 1
@@ -92,7 +92,7 @@ assert_result_contains() {
   local expected="$1"
   local file
   file=$(result_file)
-  if ! grep -qF "$expected" "$file"; then
+  if ! grep -qF -- "$expected" "$file"; then
     echo "Expected result file to contain: '$expected'" >&2
     return 1
   fi
@@ -104,8 +104,8 @@ assert_state_body_contains() {
   local file
   file=$(state_file)
   local body
-  body=$(awk '/^---$/{i++; next} i>=2' "$file")
-  if ! printf '%s' "$body" | grep -qF "$expected"; then
+  body=$(awk '/^---$/ && i<2 {i++; next} i>=2' "$file")
+  if ! printf '%s' "$body" | grep -qF -- "$expected"; then
     echo "Expected state body to contain: '$expected'" >&2
     echo "Actual body: '$body'" >&2
     return 1
@@ -115,8 +115,8 @@ assert_state_body_contains() {
 # Assert stderr contains expected text
 assert_stderr_contains() {
   local expected="$1"
-  if ! printf '%s' "$stderr" | grep -qF "$expected" 2>/dev/null; then
-    if ! printf '%s' "$output" | grep -qF "$expected" 2>/dev/null; then
+  if ! printf '%s' "$stderr" | grep -qF -- "$expected" 2>/dev/null; then
+    if ! printf '%s' "$output" | grep -qF -- "$expected" 2>/dev/null; then
       echo "Expected stderr to contain: '$expected'" >&2
       return 1
     fi

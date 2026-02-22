@@ -229,3 +229,129 @@ run_setup() {
   assert_success
   assert_state_exists
 }
+
+# --- YAML metacharacters in topic ---
+
+@test "topic with colon (YAML metachar) survives roundtrip" {
+  run_setup --personas "theater-director,urban-planner,architect" 'key: value pattern'
+  assert_success
+  assert_frontmatter "question" 'key: value pattern' "$(state_file)"
+}
+
+@test "topic with hash (YAML comment char) survives roundtrip" {
+  run_setup --personas "theater-director,urban-planner,architect" 'C# or Java?'
+  assert_success
+  assert_frontmatter "question" 'C# or Java?' "$(state_file)"
+}
+
+@test "topic with brackets survives roundtrip" {
+  run_setup --personas "theater-director,urban-planner,architect" 'Array[String] vs List<Int>'
+  assert_success
+  assert_frontmatter "question" 'Array[String] vs List<Int>' "$(state_file)"
+}
+
+# --- Unicode ---
+
+@test "topic with unicode characters survives roundtrip" {
+  run_setup --personas "theater-director,urban-planner,architect" 'Ünïcödë and 日本語 and emojis'
+  assert_success
+  assert_frontmatter "question" 'Ünïcödë and 日本語 and emojis' "$(state_file)"
+}
+
+@test "focus with unicode characters survives roundtrip" {
+  run_setup --personas "theater-director,urban-planner,architect" --focus 'Ünïcödë focus' "Test topic"
+  assert_success
+  assert_frontmatter "focus" 'Ünïcödë focus' "$(state_file)"
+}
+
+# --- Newline and tab in focus ---
+
+@test "focus with embedded newline is YAML-escaped" {
+  # Create focus with actual newline via printf
+  local focus_with_newline
+  focus_with_newline=$(printf 'Line one\nLine two')
+  run_setup --personas "theater-director,urban-planner,architect" --focus "$focus_with_newline" "Test topic"
+  assert_success
+  # Should be stored as literal \n in YAML, not an actual newline
+  local raw_line
+  raw_line=$(awk '/^---$/{c++; next} c==1{print} c>=2{exit}' "$(state_file)" | grep '^focus:')
+  # grep -F for literal two-character sequence \n (backslash + n)
+  printf '%s' "$raw_line" | grep -qF '\n'
+}
+
+@test "focus with embedded tab is YAML-escaped" {
+  local focus_with_tab
+  focus_with_tab=$(printf 'Before\tAfter')
+  run_setup --personas "theater-director,urban-planner,architect" --focus "$focus_with_tab" "Test topic"
+  assert_success
+  local raw_line
+  raw_line=$(awk '/^---$/{c++; next} c==1{print} c>=2{exit}' "$(state_file)" | grep '^focus:')
+  # grep -F for literal two-character sequence \t (backslash + t)
+  printf '%s' "$raw_line" | grep -qF '\t'
+}
+
+@test "focus with newline survives stop-hook roundtrip" {
+  local focus_with_newline
+  focus_with_newline=$(printf 'Line one\nLine two')
+  create_state_file phase=seed persona_index=0 focus="$focus_with_newline"
+  add_persona_desc_to_state "theater-director" "Theater persona"
+  add_persona_desc_to_state "urban-planner" "Urban persona"
+  add_persona_desc_to_state "biomimicry-scientist" "Bio persona"
+  setup_hook_input "Ideas"
+  run_stop_hook
+
+  assert_block_decision
+  # The focus should contain the actual newline in the prompt
+  assert_reason_contains "Line one"
+  assert_reason_contains "Line two"
+}
+
+@test "focus with tab survives stop-hook roundtrip" {
+  local focus_with_tab
+  focus_with_tab=$(printf 'Col1\tCol2')
+  create_state_file phase=seed persona_index=0 focus="$focus_with_tab"
+  add_persona_desc_to_state "theater-director" "Theater persona"
+  add_persona_desc_to_state "urban-planner" "Urban persona"
+  add_persona_desc_to_state "biomimicry-scientist" "Bio persona"
+  setup_hook_input "Ideas"
+  run_stop_hook
+
+  assert_block_decision
+  assert_reason_contains "Col1"
+  assert_reason_contains "Col2"
+}
+
+# --- Mixed escape sequences ---
+
+@test "focus with mixed escapes (backslash + quotes + newline) survives roundtrip" {
+  local complex_focus
+  complex_focus=$(printf '"hello\\\\world"\nand\tmore')
+  run_setup --personas "theater-director,urban-planner,architect" --focus "$complex_focus" "Test topic"
+  assert_success
+  local result
+  result=$(get_frontmatter "focus" "$(state_file)")
+  [[ "$result" == "$complex_focus" ]]
+}
+
+@test "backslash-n literal in topic is NOT interpreted as newline" {
+  # The two characters \ and n, not an actual newline
+  run_setup --personas "theater-director,urban-planner,architect" 'Regex uses \n for newlines'
+  assert_success
+  local result
+  result=$(get_frontmatter "question" "$(state_file)")
+  # Should contain literal \n, not an actual newline
+  [[ "$result" == 'Regex uses \n for newlines' ]]
+}
+
+@test "backslash-n literal in focus survives stop-hook roundtrip" {
+  create_state_file phase=seed persona_index=0 focus='Regex \n pattern'
+  add_persona_desc_to_state "theater-director" "Theater persona"
+  add_persona_desc_to_state "urban-planner" "Urban persona"
+  add_persona_desc_to_state "biomimicry-scientist" "Bio persona"
+  setup_hook_input "Ideas"
+  run_stop_hook
+
+  assert_block_decision
+  # Should contain literal \n in the prompt, not an actual newline
+  assert_reason_contains 'Regex \n pattern'
+}
