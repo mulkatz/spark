@@ -11,6 +11,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/mulkatz/spark?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/Claude_Code-plugin-blueviolet?style=flat-square" alt="Claude Code Plugin">
   <img src="https://img.shields.io/badge/no_build-shell_%2B_markdown-green?style=flat-square" alt="No Build Step">
+  <img src="https://img.shields.io/badge/status-in_active_development-brightgreen?style=flat-square" alt="In Active Development">
 </p>
 
 Spark is an **ideation tool** that generates diverse, non-obvious ideas by rotating 3 AI personas through Seed, Cross-Pollinate, and Synthesize phases. Each persona brings a distinct worldview — not generic role labels, but rich thinkers with specific philosophies, vocabularies, and blind spots.
