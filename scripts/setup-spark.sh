@@ -25,6 +25,11 @@ while [[ $# -gt 0 ]]; do
         echo "Error: --personas requires a value (comma-separated names or custom:description)" >&2
         exit 1
       fi
+      # Reject newlines/CR in raw input (read would silently truncate at newline)
+      if [[ "$2" == *$'\n'* ]] || [[ "$2" == *$'\r'* ]]; then
+        echo "Error: persona specification cannot contain newline or carriage return characters" >&2
+        exit 1
+      fi
       # Split comma-separated personas (with special handling for linkedin: which may contain commas)
       IFS=',' read -ra RAW_PERSONA_ARGS <<< "$2"
       _pi=0
@@ -138,6 +143,11 @@ if [[ "$PERSONA_COUNT" -gt 0 ]]; then
       echo "Error: persona name cannot contain HTML comment markers: $pname" >&2
       exit 1
     fi
+    # Check for newlines and carriage returns (breaks YAML frontmatter)
+    if [[ "$pname" == *$'\n'* ]] || [[ "$pname" == *$'\r'* ]]; then
+      echo "Error: persona name cannot contain newline or carriage return characters" >&2
+      exit 1
+    fi
     # Skip custom: prefix for file validation
     if [[ "$pname" == custom:* ]]; then
       # Custom persona — validate description is not empty
@@ -244,7 +254,7 @@ for i in $(seq 0 $((PERSONA_COUNT - 1))); do
 done
 GEN_INDICES_STR=""
 if [[ ${#GEN_INDICES[@]} -gt 0 ]]; then
-  GEN_INDICES_STR=$(IFS='|'; echo "${GEN_INDICES[*]}")
+  GEN_INDICES_STR=$(IFS='|'; printf '%s' "${GEN_INDICES[*]}")
 fi
 
 # --- Display Name Helper ---
@@ -253,16 +263,16 @@ fi
 display_name() {
   local name="$1"
   if [[ "$name" == custom:* ]]; then
-    echo "Custom Perspective"
+    printf '%s' "Custom Perspective"
   elif [[ "$name" == linkedin:* ]]; then
     local ref="${name#linkedin:}"
     if [[ "$ref" == http* ]]; then
-      echo "$ref" | sed 's|.*/in/||;s|/.*||;s|-| |g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
+      printf '%s' "$ref" | sed 's|.*/in/||;s|/.*||;s|-| |g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
     else
-      echo "${ref%%,*}"
+      printf '%s' "${ref%%,*}"
     fi
   else
-    echo "$name"
+    printf '%s' "$name"
   fi
 }
 
@@ -407,7 +417,8 @@ yaml_escape() {
 QUESTION_YAML="\"$(yaml_escape "$QUESTION")\""
 
 # Build personas YAML value (pipe-separated for easy parsing)
-PERSONAS_YAML=$(IFS='|'; echo "${PERSONA_NAMES[*]}")
+# Use printf instead of echo to avoid flag interpretation if name starts with -e/-n
+PERSONAS_YAML=$(IFS='|'; printf '%s' "${PERSONA_NAMES[*]}")
 
 # Generate default output path if not specified
 if [[ -z "$OUTPUT" ]]; then
@@ -418,7 +429,7 @@ fi
 
 # Create state file
 # Build constraints YAML value (pipe-separated)
-CONSTRAINTS_YAML=$(IFS='|'; echo "${SELECTED_CONSTRAINTS[*]}")
+CONSTRAINTS_YAML=$(IFS='|'; printf '%s' "${SELECTED_CONSTRAINTS[*]}")
 
 # Determine initial phase
 INITIAL_PHASE="seed"
@@ -508,11 +519,11 @@ if [[ "$INITIAL_PHASE" == "persona_gen" ]]; then
   # Read persona_gen prompt template
   PERSONA_GEN_PROMPT=$(cat "$PLUGIN_ROOT/prompts/phases/persona-gen.md")
 
-  echo "$PERSONA_GEN_PROMPT"
+  printf '%s\n' "$PERSONA_GEN_PROMPT"
   echo ""
   echo "## Person to Research"
   echo ""
-  echo "> $FIRST_GEN_REF"
+  printf '%s\n' "> $FIRST_GEN_REF"
 else
   # Standard seed phase
   FIRST_PERSONA="${PERSONA_NAMES[0]}"
@@ -556,16 +567,16 @@ else
     echo "Stay in character throughout. Every idea should feel like it could only"
     echo "come from someone with YOUR specific background and worldview."
   else
-    echo "# Persona: $FIRST_PERSONA"
+    printf '%s\n' "# Persona: $FIRST_PERSONA"
     echo ""
-    echo "$FIRST_DESC"
+    printf '%s\n' "$FIRST_DESC"
   fi
   echo ""
   echo "---"
   echo ""
-  echo "$SEED_PROMPT"
+  printf '%s\n' "$SEED_PROMPT"
   echo ""
-  echo "$QUESTION"
+  printf '%s\n' "$QUESTION"
   if [[ -n "$FOCUS" ]]; then
     echo ""
     echo "## Focus Lens: $FOCUS"

@@ -146,9 +146,12 @@ fi
 # --- Helper Functions ---
 
 # Get persona description from state file
+# Uses ENVIRON instead of -v to avoid awk interpreting backslash escape sequences
+# in persona names (e.g. custom:C:\new would have \n corrupted).
 get_persona_desc() {
   local name="$1"
-  awk -v name="$name" '
+  _SPARK_PNAME="$name" awk '
+    BEGIN { name = ENVIRON["_SPARK_PNAME"] }
     index($0, "<!-- persona:" name " -->") > 0 { found=1; next }
     /<!-- \/persona -->/ { if(found) exit }
     found { print }
@@ -156,19 +159,20 @@ get_persona_desc() {
 }
 
 # Display name helper — strips custom:/linkedin: prefixes for human-readable output
+# Uses printf instead of echo to avoid flag interpretation if name starts with -e/-n
 display_name() {
   local name="$1"
   if [[ "$name" == custom:* ]]; then
-    echo "Custom Perspective"
+    printf '%s' "Custom Perspective"
   elif [[ "$name" == linkedin:* ]]; then
     local ref="${name#linkedin:}"
     if [[ "$ref" == http* ]]; then
-      echo "$ref" | sed 's|.*/in/||;s|/.*||;s|-| |g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
+      printf '%s' "$ref" | sed 's|.*/in/||;s|/.*||;s|-| |g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
     else
-      echo "${ref%%,*}"
+      printf '%s' "${ref%%,*}"
     fi
   else
-    echo "$name"
+    printf '%s' "$name"
   fi
 }
 
