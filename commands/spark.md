@@ -15,9 +15,10 @@ Execute the setup script to initialize the ideation session:
 
 You are now entering a multi-persona ideation session. The Spark stop hook will rotate you through phases:
 
-1. **Seed** — Each persona generates ideas independently (you will NOT see other personas' ideas)
-2. **Cross-Pollinate** — Each persona sees all seed ideas and transforms them using SCAMPER
-3. **Synthesize** — Produce a structured report with rankings, connections, and next steps
+1. **Persona Generation** _(only if `linkedin:` personas are present)_ — Research and generate full persona profiles
+2. **Seed** — Each persona generates ideas independently (you will NOT see other personas' ideas)
+3. **Cross-Pollinate** — Each persona sees all seed ideas and transforms them using SCAMPER
+4. **Synthesize** — Produce a structured report with rankings, connections, and next steps
 
 Each time you try to stop, the hook will feed you the next persona/phase prompt. Commit fully to each persona — think through THEIR worldview, use THEIR vocabulary, see through THEIR lens.
 

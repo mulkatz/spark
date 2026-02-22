@@ -22,6 +22,8 @@ create_state_file() {
   local output=""
   local constraints=""
   local started_at="2026-01-01T00:00:00Z"
+  local gen_indices=""
+  local gen_current="0"
   local body=""
 
   # Parse key=value arguments
@@ -41,6 +43,8 @@ create_state_file() {
       output=*) output="${arg#output=}" ;;
       constraints=*) constraints="${arg#constraints=}" ;;
       started_at=*) started_at="${arg#started_at=}" ;;
+      gen_indices=*) gen_indices="${arg#gen_indices=}" ;;
+      gen_current=*) gen_current="${arg#gen_current=}" ;;
       body=*) body="${arg#body=}" ;;
     esac
   done
@@ -56,13 +60,14 @@ create_state_file() {
     printf '%s' "$s"
   }
 
-  local esc_question esc_focus esc_personas esc_constraints esc_context_source esc_output
+  local esc_question esc_focus esc_personas esc_constraints esc_context_source esc_output esc_gen_indices
   esc_question="\"$(_test_yaml_escape "$question")\""
   esc_focus=$(_test_yaml_escape "$focus")
   esc_personas=$(_test_yaml_escape "$personas")
   esc_constraints=$(_test_yaml_escape "$constraints")
   esc_context_source=$(_test_yaml_escape "$context_source")
   esc_output=$(_test_yaml_escape "$output")
+  esc_gen_indices=$(_test_yaml_escape "$gen_indices")
 
   local state_file="${TEST_DIR}/.claude/spark-state.local.md"
   mkdir -p "$(dirname "$state_file")"
@@ -83,6 +88,8 @@ focus: "$esc_focus"
 context_source: "$esc_context_source"
 output: "$esc_output"
 started_at: "$started_at"
+gen_indices: "$esc_gen_indices"
+gen_current: $gen_current
 ---
 EOF
 

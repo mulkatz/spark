@@ -34,8 +34,9 @@ Rich creative worldview personas with encoded philosophies, specific vocabularie
 
 ### Persona Sources
 
-- **Presets**: 8-10 curated personas covering diverse thinking styles
-- **Custom**: User-defined personas via `--personas "custom:description"`
+- **Presets**: 9 curated personas covering diverse thinking styles
+- **Custom**: User-defined personas via `--personas "custom:description"` — wrapped in a rich template that instructs Claude to fully embody the character (worldview, vocabulary, blind spots)
+- **LinkedIn**: Real-person personas via `--personas "linkedin:Name, Title"` or `--personas "linkedin:URL"` — a `persona_gen` phase researches the person (using WebSearch if available) and generates a full persona document
 - **Auto-selection**: System chooses 3 fitting personas based on the topic (default)
 
 ---
@@ -83,6 +84,7 @@ Phase 3: SYNTHESIZE (Convergent — meta-perspective)
 ## State Machine
 
 ```
+[persona_gen(p0) → persona_gen(p1) → ...] →   (only if linkedin: personas present)
 seed_p1 → seed_p2 → seed_p3 →
 cross_p1 → cross_p2 → cross_p3 →
 [round 2: cross_p1 → cross_p2 → cross_p3] →
@@ -110,6 +112,8 @@ focus: ""
 context_source: ""
 output: "~/Desktop/spark-2026-02-21-topic.html"
 started_at: "2026-02-21T10:00:00Z"
+gen_indices: ""
+gen_current: 0
 ---
 
 <!-- persona:theater-director -->
@@ -260,8 +264,17 @@ Each scored 1-5, composite = weighted average. Weights configurable (moonshot se
 # With custom personas
 /spark --personas "theater-director,urban-planner,neuroscientist" "topic"
 
-# With fully custom persona
+# With fully custom persona (wrapped in rich template)
 /spark --personas "custom:A Buddhist monk who spent 20 years in tech" "topic"
+
+# With LinkedIn persona (researched and generated before ideation)
+/spark --personas "linkedin:Satya Nadella" "topic"
+
+# LinkedIn with title (commas consumed until next recognized persona)
+/spark --personas "linkedin:Jane Smith, VP Engineering at Google,architect" "topic"
+
+# Mixed: preset + linkedin + custom
+/spark --personas "architect,linkedin:Someone Famous,custom:A poet" "topic"
 
 # Interactive mode (pause before synthesis)
 /spark --interactive "topic"

@@ -20,4 +20,4 @@ To cancel the active ideation session:
 3. **If EXISTS**:
    - Read `.claude/spark-state.local.md` to get the current phase, persona, and topic
    - Remove the file using Bash: `rm .claude/spark-state.local.md`
-   - Report: "Cancelled Spark session: '[topic]' (was at phase: [phase], persona: [persona])"
+   - Report: "Cancelled Spark session: '[topic]' (was at phase: [phase], persona: [persona])" (strip `custom:` and `linkedin:` prefixes from persona display)

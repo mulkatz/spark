@@ -25,12 +25,32 @@ while [[ $# -gt 0 ]]; do
         echo "Error: --personas requires a value (comma-separated names or custom:description)" >&2
         exit 1
       fi
-      # Split comma-separated personas
-      IFS=',' read -ra PERSONA_ARGS <<< "$2"
-      for p in "${PERSONA_ARGS[@]}"; do
-        p=$(printf '%s' "$p" | sed 's/^ *//;s/ *$//')
-        if [[ -n "$p" ]]; then
-          PERSONAS+=("$p")
+      # Split comma-separated personas (with special handling for linkedin: which may contain commas)
+      IFS=',' read -ra RAW_PERSONA_ARGS <<< "$2"
+      _pi=0
+      while [[ $_pi -lt ${#RAW_PERSONA_ARGS[@]} ]]; do
+        _p=$(printf '%s' "${RAW_PERSONA_ARGS[$_pi]}" | sed 's/^ *//;s/ *$//')
+        if [[ "$_p" == linkedin:* ]]; then
+          # LinkedIn references may contain commas — consume subsequent segments
+          # until we hit something that looks like a new persona
+          _combined="$_p"
+          _pj=$((_pi + 1))
+          while [[ $_pj -lt ${#RAW_PERSONA_ARGS[@]} ]]; do
+            _next=$(printf '%s' "${RAW_PERSONA_ARGS[$_pj]}" | sed 's/^ *//;s/ *$//')
+            # Stop if this segment starts a new persona (custom:, linkedin:, or valid preset)
+            if [[ "$_next" == custom:* ]] || [[ "$_next" == linkedin:* ]] || [[ -f "$PLUGIN_ROOT/prompts/personas/${_next}.md" ]]; then
+              break
+            fi
+            _combined="$_combined, $_next"
+            _pj=$((_pj + 1))
+          done
+          PERSONAS+=("$_combined")
+          _pi=$_pj
+        else
+          if [[ -n "$_p" ]]; then
+            PERSONAS+=("$_p")
+          fi
+          _pi=$((_pi + 1))
         fi
       done
       shift 2
@@ -128,6 +148,15 @@ if [[ "$PERSONA_COUNT" -gt 0 ]]; then
       fi
       continue
     fi
+    # Skip linkedin: prefix for file validation
+    if [[ "$pname" == linkedin:* ]]; then
+      local_ref="${pname#linkedin:}"
+      if [[ -z "$local_ref" ]]; then
+        echo "Error: linkedin persona requires a URL or name (linkedin:URL or linkedin:Name, Title)" >&2
+        exit 1
+      fi
+      continue
+    fi
     # Validate preset persona exists
     preset_file="$PLUGIN_ROOT/prompts/personas/${pname}.md"
     if [[ ! -f "$preset_file" ]]; then
@@ -187,6 +216,11 @@ for persona in "${PERSONAS[@]}"; do
     local_desc="${persona#custom:}"
     PERSONA_NAMES+=("$persona")
     PERSONA_DESCRIPTIONS+=("$local_desc")
+  elif [[ "$persona" == linkedin:* ]]; then
+    # LinkedIn persona — placeholder description, will be generated in persona_gen phase
+    local_ref="${persona#linkedin:}"
+    PERSONA_NAMES+=("$persona")
+    PERSONA_DESCRIPTIONS+=("[Persona to be researched and generated from: $local_ref]")
   else
     preset_file="$PLUGIN_ROOT/prompts/personas/${persona}.md"
     if [[ -f "$preset_file" ]]; then
@@ -198,6 +232,39 @@ for persona in "${PERSONAS[@]}"; do
     fi
   fi
 done
+
+# --- LinkedIn Persona Detection ---
+# Identify which persona indices need generation (linkedin: personas)
+
+GEN_INDICES=()
+for i in $(seq 0 $((PERSONA_COUNT - 1))); do
+  if [[ "${PERSONA_NAMES[$i]}" == linkedin:* ]]; then
+    GEN_INDICES+=("$i")
+  fi
+done
+GEN_INDICES_STR=""
+if [[ ${#GEN_INDICES[@]} -gt 0 ]]; then
+  GEN_INDICES_STR=$(IFS='|'; echo "${GEN_INDICES[*]}")
+fi
+
+# --- Display Name Helper ---
+# Strips custom:/linkedin: prefixes for human-readable output
+
+display_name() {
+  local name="$1"
+  if [[ "$name" == custom:* ]]; then
+    echo "Custom Perspective"
+  elif [[ "$name" == linkedin:* ]]; then
+    local ref="${name#linkedin:}"
+    if [[ "$ref" == http* ]]; then
+      echo "$ref" | sed 's|.*/in/||;s|/.*||;s|-| |g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
+    else
+      echo "${ref%%,*}"
+    fi
+  else
+    echo "$name"
+  fi
+}
 
 # --- Random Constraint Selection ---
 # Oblique-strategy-inspired constraints for the Seed phase.
@@ -353,11 +420,17 @@ fi
 # Build constraints YAML value (pipe-separated)
 CONSTRAINTS_YAML=$(IFS='|'; echo "${SELECTED_CONSTRAINTS[*]}")
 
+# Determine initial phase
+INITIAL_PHASE="seed"
+if [[ -n "$GEN_INDICES_STR" ]]; then
+  INITIAL_PHASE="persona_gen"
+fi
+
 cat > "$SPARK_STATE_FILE" <<EOF
 ---
 active: true
 question: $QUESTION_YAML
-phase: seed
+phase: $INITIAL_PHASE
 persona_index: 0
 round: 1
 max_rounds: $ROUNDS
@@ -369,6 +442,8 @@ focus: "$(yaml_escape "$FOCUS")"
 context_source: "$(yaml_escape "$CONTEXT_SOURCE")"
 output: "$(yaml_escape "$OUTPUT")"
 started_at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+gen_indices: "$(yaml_escape "$GEN_INDICES_STR")"
+gen_current: 0
 ---
 EOF
 
@@ -382,14 +457,11 @@ if [[ "$HAS_CONTEXT" == "true" ]]; then
   printf '\n%s\n' "$CONTEXT_BODY" >> "$SPARK_STATE_FILE"
 fi
 
-# Read the first persona's seed prompt
-FIRST_PERSONA="${PERSONA_NAMES[0]}"
-FIRST_DESC="${PERSONA_DESCRIPTIONS[0]}"
-FIRST_CONSTRAINT="${SELECTED_CONSTRAINTS[0]}"
-
-# Read seed phase prompt and inject constraint
-SEED_PROMPT=$(cat "$PLUGIN_ROOT/prompts/phases/seed.md")
-SEED_PROMPT="${SEED_PROMPT//\[INJECT_CONSTRAINT\]/$FIRST_CONSTRAINT}"
+# Build display names for banner
+DISPLAY_NAMES=()
+for pn in "${PERSONA_NAMES[@]}"; do
+  DISPLAY_NAMES+=("$(display_name "$pn")")
+done
 
 # Build the initial prompt
 echo ""
@@ -398,7 +470,7 @@ echo "  SPARK — Collaborative Ideation"
 echo "============================================================"
 echo ""
 echo "  Topic:       $QUESTION"
-echo "  Personas:    ${PERSONA_NAMES[*]}"
+echo "  Personas:    ${DISPLAY_NAMES[*]}"
 echo "  Rounds:      $ROUNDS"
 if [[ -n "$FOCUS" ]]; then
   echo "  Focus:       $FOCUS"
@@ -411,36 +483,99 @@ if [[ "$INTERACTIVE" == "true" ]]; then
   echo "  Interactive: ENABLED ($INTERACTIVE_LEVEL)"
 fi
 echo ""
-echo "  Phase:       SEED — $FIRST_PERSONA (1 of $PERSONA_COUNT)"
-echo ""
-echo "  The session will cycle through:"
-echo "    Seed (each persona independently) →"
-echo "    Cross-Pollinate (SCAMPER transformations) →"
-if [[ "$ROUNDS" -gt 1 ]]; then
-  echo "    [× $ROUNDS rounds of cross-pollination] →"
-fi
-echo "    Synthesize (pattern recognition + ranking)"
-echo ""
-echo "============================================================"
-echo ""
-echo "# Persona: $FIRST_PERSONA"
-echo ""
-echo "$FIRST_DESC"
-echo ""
-echo "---"
-echo ""
-echo "$SEED_PROMPT"
-echo ""
-echo "$QUESTION"
-if [[ -n "$FOCUS" ]]; then
+
+if [[ "$INITIAL_PHASE" == "persona_gen" ]]; then
+  # Persona generation phase — research LinkedIn personas first
+  FIRST_GEN_INDEX="${GEN_INDICES[0]}"
+  FIRST_GEN_PERSONA="${PERSONA_NAMES[$FIRST_GEN_INDEX]}"
+  FIRST_GEN_REF="${FIRST_GEN_PERSONA#linkedin:}"
+  FIRST_GEN_DISPLAY="$(display_name "$FIRST_GEN_PERSONA")"
+
+  echo "  Phase:       PERSONA GENERATION — $FIRST_GEN_DISPLAY (1 of ${#GEN_INDICES[@]})"
   echo ""
-  echo "## Focus Lens: $FOCUS"
+  echo "  The session will cycle through:"
+  echo "    Persona Generation (research LinkedIn personas) →"
+  echo "    Seed (each persona independently) →"
+  echo "    Cross-Pollinate (SCAMPER transformations) →"
+  if [[ "$ROUNDS" -gt 1 ]]; then
+    echo "    [× $ROUNDS rounds of cross-pollination] →"
+  fi
+  echo "    Synthesize (pattern recognition + ranking)"
   echo ""
-  echo "Channel your ideation through this lens. How does your persona's perspective intersect with: **$FOCUS**?"
-fi
-if [[ "$HAS_CONTEXT" == "true" ]]; then
+  echo "============================================================"
   echo ""
-  printf '%s\n' "$CONTEXT_BODY"
+
+  # Read persona_gen prompt template
+  PERSONA_GEN_PROMPT=$(cat "$PLUGIN_ROOT/prompts/phases/persona-gen.md")
+
+  echo "$PERSONA_GEN_PROMPT"
+  echo ""
+  echo "## Person to Research"
+  echo ""
+  echo "> $FIRST_GEN_REF"
+else
+  # Standard seed phase
+  FIRST_PERSONA="${PERSONA_NAMES[0]}"
+  FIRST_DESC="${PERSONA_DESCRIPTIONS[0]}"
+  FIRST_CONSTRAINT="${SELECTED_CONSTRAINTS[0]}"
+
+  # Read seed phase prompt and inject constraint
+  SEED_PROMPT=$(cat "$PLUGIN_ROOT/prompts/phases/seed.md")
+  SEED_PROMPT="${SEED_PROMPT//\[INJECT_CONSTRAINT\]/$FIRST_CONSTRAINT}"
+
+  FIRST_DISPLAY="$(display_name "$FIRST_PERSONA")"
+
+  echo "  Phase:       SEED — $FIRST_DISPLAY (1 of $PERSONA_COUNT)"
+  echo ""
+  echo "  The session will cycle through:"
+  echo "    Seed (each persona independently) →"
+  echo "    Cross-Pollinate (SCAMPER transformations) →"
+  if [[ "$ROUNDS" -gt 1 ]]; then
+    echo "    [× $ROUNDS rounds of cross-pollination] →"
+  fi
+  echo "    Synthesize (pattern recognition + ranking)"
+  echo ""
+  echo "============================================================"
+  echo ""
+
+  # Enhanced custom persona template
+  if [[ "$FIRST_PERSONA" == custom:* ]]; then
+    echo "# Your Persona"
+    echo ""
+    echo "You are embodying a unique character for this brainstorming session."
+    echo "Fully inhabit this persona based on the following seed:"
+    echo ""
+    echo "> $FIRST_DESC"
+    echo ""
+    echo "Build your character completely:"
+    echo "- What is your fundamental worldview?"
+    echo "- What vocabulary, metaphors, and thinking patterns come naturally to you?"
+    echo "- What do you focus on that others might miss?"
+    echo "- What are your blind spots and biases?"
+    echo ""
+    echo "Stay in character throughout. Every idea should feel like it could only"
+    echo "come from someone with YOUR specific background and worldview."
+  else
+    echo "# Persona: $FIRST_PERSONA"
+    echo ""
+    echo "$FIRST_DESC"
+  fi
+  echo ""
+  echo "---"
+  echo ""
+  echo "$SEED_PROMPT"
+  echo ""
+  echo "$QUESTION"
+  if [[ -n "$FOCUS" ]]; then
+    echo ""
+    echo "## Focus Lens: $FOCUS"
+    echo ""
+    echo "Channel your ideation through this lens. How does your persona's perspective intersect with: **$FOCUS**?"
+  fi
+  if [[ "$HAS_CONTEXT" == "true" ]]; then
+    echo ""
+    printf '%s\n' "$CONTEXT_BODY"
+  fi
+  echo ""
+  echo "You are Persona 1 of $PERSONA_COUNT. Generate your ideas independently — you have NOT seen what others think."
 fi
-echo ""
-echo "You are Persona 1 of $PERSONA_COUNT. Generate your ideas independently — you have NOT seen what others think."

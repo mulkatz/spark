@@ -137,6 +137,28 @@ setup() {
   grep -q 'persona-teal' "$result_path"
 }
 
+@test "html output strips custom: and linkedin: prefixes from headings" {
+  local result_path="${TEST_DIR}/report.html"
+  create_state_file phase=synthesize persona_index=0 output="$result_path" \
+    personas="custom:A deep-sea diver|linkedin:Jane Smith, Engineer|game-designer"
+  add_persona_desc_to_state "custom:A deep-sea diver" "A deep-sea diver"
+  add_persona_desc_to_state "linkedin:Jane Smith, Engineer" "Jane persona"
+  add_persona_desc_to_state "game-designer" "Game designer persona"
+  add_seed_to_state "custom:A deep-sea diver" "## Seed: custom:A deep-sea diver\n\nDiver seeds"
+  add_seed_to_state "linkedin:Jane Smith, Engineer" "## Seed: linkedin:Jane Smith, Engineer\n\nJane seeds"
+  add_seed_to_state "game-designer" "## Seed: game-designer\n\nGame seeds"
+  setup_hook_input "Synthesis"
+  run_stop_hook
+
+  assert_success
+  # H2 headings should show cleaned names, not raw prefixes
+  grep -q 'Custom Perspective' "$result_path"
+  grep -q 'Jane Smith' "$result_path"
+  # Raw prefixes should NOT appear in heading text
+  ! grep -q '>Seed: custom:' "$result_path"
+  ! grep -q '>Seed: linkedin:' "$result_path"
+}
+
 @test "html output contains Spark branding" {
   local result_path="${TEST_DIR}/report.html"
   create_state_file phase=synthesize persona_index=0 output="$result_path"

@@ -18,6 +18,9 @@ node_modules
 *.tgz
 bun.lock
 
+# Notes (local ideation, feature ideas)
+notes/
+
 # Spark runtime state (generated during ideation sessions)
 .claude/spark-state.local.md
 .claude/spark-result.local.md

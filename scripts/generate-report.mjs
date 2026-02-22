@@ -61,6 +61,26 @@ function parseMetadata(text) {
   return meta
 }
 
+// Strip custom:/linkedin: prefixes from persona names for display
+function cleanPersonaName(name) {
+  const trimmed = name.trim()
+  if (trimmed.startsWith('custom:')) return 'Custom Perspective'
+  if (trimmed.startsWith('linkedin:')) {
+    const ref = trimmed.slice('linkedin:'.length)
+    if (/^https?:/.test(ref)) {
+      // Extract name from LinkedIn URL slug
+      const slug = ref.replace(/.*\/in\//, '').replace(/\/.*/, '')
+      return slug
+        .split('-')
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ')
+    }
+    // Name + description format: take everything before the first comma
+    return ref.split(',')[0].trim()
+  }
+  return trimmed
+}
+
 function formatDate(str) {
   try {
     const d = new Date(str)
@@ -151,13 +171,22 @@ function convertMarkdown(md) {
     }
   }
 
+  // Clean H2 heading text for display (strip custom:/linkedin: prefixes)
+  function cleanHeadingText(text) {
+    // Seed: custom:description → Seed: Custom Perspective
+    // Cross-Pollination Round 1: linkedin:Jane Smith, Engineer → Cross-Pollination Round 1: Jane Smith
+    return text
+      .replace(/(Seed:\s*)(.+)$/i, (_, prefix, name) => prefix + cleanPersonaName(name))
+      .replace(/(Cross-Pollination(?:\s+Round\s+\d+)?:\s*)(.+)$/i, (_, prefix, name) => prefix + cleanPersonaName(name))
+  }
+
   // Detect phase and persona from H2 text
   function detectPhase(text) {
     const seedMatch = text.match(/^Seed:\s*(.+)$/i)
-    if (seedMatch) return { phase: 'seed', persona: seedMatch[1].trim() }
+    if (seedMatch) return { phase: 'seed', persona: cleanPersonaName(seedMatch[1]) }
 
     const crossMatch = text.match(/^Cross-Pollination(?:\s+Round\s+\d+)?:\s*(.+)$/i)
-    if (crossMatch) return { phase: 'cross', persona: crossMatch[1].trim() }
+    if (crossMatch) return { phase: 'cross', persona: cleanPersonaName(crossMatch[1]) }
 
     if (/^Session\s+Record$/i.test(text)) return { phase: 'session-record', persona: null }
 
@@ -209,13 +238,14 @@ function convertMarkdown(md) {
         closeSection()
         const id = slugify(text)
         const { phase, persona } = detectPhase(text)
+        const displayText = cleanHeadingText(text)
         let cls = ''
         if (phase === 'synthesis') cls = ' synthesis-section'
         if (phase === 'session-record') cls = ' session-record-section'
 
         cur = []
         cur.push(`<section id="${id}" class="section${cls}">`)
-        cur.push(`<h2>${convertInline(text)}</h2>`)
+        cur.push(`<h2>${convertInline(displayText)}</h2>`)
 
         if (phase === 'synthesis') {
           cur.push('<div class="synthesis-callout">')
@@ -223,7 +253,7 @@ function convertMarkdown(md) {
         }
 
         const tocPhase = phase || ''
-        tocItems.push({ id, text, level: 2, phase: tocPhase, persona })
+        tocItems.push({ id, text: displayText, level: 2, phase: tocPhase, persona })
         i++
         continue
       }

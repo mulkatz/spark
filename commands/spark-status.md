@@ -20,8 +20,9 @@ Check the current ideation session status:
    - Read `.claude/spark-state.local.md`
    - Report the following from the YAML frontmatter:
      - **Topic**: the `question` field
-     - **Phase**: the `phase` field (seed/cross/synthesize)
-     - **Persona**: current persona based on `persona_index` and `personas` fields
+     - **Phase**: the `phase` field (persona_gen/seed/cross/synthesize)
+     - **Persona**: current persona based on `persona_index` and `personas` fields (strip `custom:` and `linkedin:` prefixes for display)
      - **Round**: `round` of `max_rounds`
+     - **Generating**: if phase is `persona_gen`, show `gen_current` of total `gen_indices` count
      - **Interactive**: the `interactive` field (true/false)
      - **Started**: the `started_at` field

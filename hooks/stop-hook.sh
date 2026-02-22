@@ -62,6 +62,8 @@ INTERACTIVE=$(_fm interactive)
 INTERACTIVE_LEVEL=$(_fmq interactive_level)
 FOCUS=$(_fmq focus)
 OUTPUT=$(_fmq output)
+GEN_INDICES_STR=$(_fmq gen_indices)
+GEN_CURRENT=$(_fm gen_current)
 
 # Parse constraints into array
 CONSTRAINT_LIST=()
@@ -102,7 +104,7 @@ fi
 
 # Validate phase
 case "$PHASE" in
-  seed|cross|synthesize|interactive-checkpoint) ;;
+  seed|cross|synthesize|interactive-checkpoint|persona_gen) ;;
   *)
     echo "Warning: Spark state corrupted (invalid phase: '$PHASE'). Cleaning up." >&2
     rm -f "$SPARK_STATE_FILE"
@@ -141,6 +143,51 @@ if [[ -z "$LAST_OUTPUT" ]]; then
   exit 0
 fi
 
+# --- Helper Functions ---
+
+# Get persona description from state file
+get_persona_desc() {
+  local name="$1"
+  awk -v name="$name" '
+    index($0, "<!-- persona:" name " -->") > 0 { found=1; next }
+    /<!-- \/persona -->/ { if(found) exit }
+    found { print }
+  ' "$SPARK_STATE_FILE"
+}
+
+# Display name helper — strips custom:/linkedin: prefixes for human-readable output
+display_name() {
+  local name="$1"
+  if [[ "$name" == custom:* ]]; then
+    echo "Custom Perspective"
+  elif [[ "$name" == linkedin:* ]]; then
+    local ref="${name#linkedin:}"
+    if [[ "$ref" == http* ]]; then
+      echo "$ref" | sed 's|.*/in/||;s|/.*||;s|-| |g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1'
+    else
+      echo "${ref%%,*}"
+    fi
+  else
+    echo "$name"
+  fi
+}
+
+# Replace persona description in state file (used by persona_gen phase)
+# Uses ENVIRON instead of -v to avoid awk interpreting backslash escape sequences
+# in the generated persona content (e.g. \n, \t in code examples would be corrupted).
+replace_persona_desc() {
+  local name="$1" new_desc="$2"
+  local temp="${SPARK_STATE_FILE}.tmp.$$"
+  _SPARK_PNAME="$name" _SPARK_PDESC="$new_desc" awk '
+    BEGIN { name = ENVIRON["_SPARK_PNAME"]; desc = ENVIRON["_SPARK_PDESC"] }
+    index($0, "<!-- persona:" name " -->") > 0 { print; printf "%s\n", desc; skip=1; next }
+    /<!-- \/persona -->/ { if(skip) { skip=0 } }
+    skip { next }
+    { print }
+  ' "$SPARK_STATE_FILE" > "$temp"
+  mv "$temp" "$SPARK_STATE_FILE"
+}
+
 # Save the original phase/index for transcript attribution
 ORIGINAL_PHASE="$PHASE"
 ORIGINAL_INDEX="$PERSONA_INDEX"
@@ -151,6 +198,12 @@ ORIGINAL_ROUND="$ROUND"
 
 if [[ "$ORIGINAL_PHASE" == "interactive-checkpoint" ]]; then
   : # Do not append interactive-checkpoint output to transcript
+elif [[ "$ORIGINAL_PHASE" == "persona_gen" ]]; then
+  # Replace placeholder persona description with generated content
+  IFS='|' read -ra GEN_IDX_ARR <<< "$GEN_INDICES_STR"
+  CURRENT_GEN_PERSONA_INDEX="${GEN_IDX_ARR[$GEN_CURRENT]}"
+  CURRENT_GEN_PERSONA_NAME="${PERSONA_NAMES[$CURRENT_GEN_PERSONA_INDEX]}"
+  replace_persona_desc "$CURRENT_GEN_PERSONA_NAME" "$LAST_OUTPUT"
 elif [[ "$ORIGINAL_PHASE" == "seed" ]]; then
   PERSONA_NAME="${PERSONA_NAMES[$ORIGINAL_INDEX]}"
   printf '\n## Seed: %s\n\n%s\n' "$PERSONA_NAME" "$LAST_OUTPUT" >> "$SPARK_STATE_FILE"
@@ -169,6 +222,16 @@ NEXT_ROUND="$ROUND"
 LAST_INDEX=$((PERSONA_COUNT - 1))
 
 case "$PHASE" in
+  persona_gen)
+    IFS='|' read -ra GEN_IDX_ARR <<< "$GEN_INDICES_STR"
+    NEXT_GEN=$((GEN_CURRENT + 1))
+    if [[ "$NEXT_GEN" -lt "${#GEN_IDX_ARR[@]}" ]]; then
+      NEXT_PHASE="persona_gen"
+    else
+      NEXT_PHASE="seed"
+      NEXT_INDEX=0
+    fi
+    ;;
   seed)
     if [[ "$PERSONA_INDEX" -lt "$LAST_INDEX" ]]; then
       # More personas to seed
@@ -239,9 +302,14 @@ case "$PHASE" in
     build_full_report() {
       printf '# Spark Report: %s\n\n' "$QUESTION"
 
-      local meta
+      local meta display_personas
+      display_personas=""
+      for pn in "${PERSONA_NAMES[@]}"; do
+        if [[ -n "$display_personas" ]]; then display_personas="$display_personas, "; fi
+        display_personas="$display_personas$(display_name "$pn")"
+      done
       meta=$(printf '> **Personas**: %s | **Rounds**: %s | **Date**: %s' \
-        "$(echo "$PERSONAS" | tr '|' ', ')" "$ROUND" "$TIMESTAMP")
+        "$display_personas" "$ROUND" "$TIMESTAMP")
       if [[ -n "$FOCUS" ]]; then
         meta=$(printf '%s\n> **Focus**: %s' "$meta" "$FOCUS")
       fi
@@ -286,11 +354,19 @@ esac
 
 # Update state file frontmatter
 TEMP_FILE="${SPARK_STATE_FILE}.tmp.$$"
-awk -v next_phase="$NEXT_PHASE" -v next_index="$NEXT_INDEX" -v next_round="$NEXT_ROUND" '
+
+# Compute next gen_current value
+NEXT_GEN_CURRENT="$GEN_CURRENT"
+if [[ "$PHASE" == "persona_gen" ]]; then
+  NEXT_GEN_CURRENT=$((GEN_CURRENT + 1))
+fi
+
+awk -v next_phase="$NEXT_PHASE" -v next_index="$NEXT_INDEX" -v next_round="$NEXT_ROUND" -v next_gen="$NEXT_GEN_CURRENT" '
   /^---$/ { count++ }
   count <= 1 && /^phase: / { print "phase: " next_phase; next }
   count <= 1 && /^persona_index: / { print "persona_index: " next_index; next }
   count <= 1 && /^round: / { print "round: " next_round; next }
+  count <= 1 && /^gen_current: / { print "gen_current: " next_gen; next }
   { print }
 ' "$SPARK_STATE_FILE" > "$TEMP_FILE"
 mv "$TEMP_FILE" "$SPARK_STATE_FILE"
@@ -301,16 +377,6 @@ mv "$TEMP_FILE" "$SPARK_STATE_FILE"
 IDEATION_TRANSCRIPT=$(awk '/^## (Seed|Cross-Pollination)/{d=1} d{print}' "$SPARK_STATE_FILE")
 # Full body (for interactive checkpoint which needs context too)
 FULL_BODY=$(awk '/^---$/{i++; next} i>=2' "$SPARK_STATE_FILE")
-
-# Get persona description from state file
-get_persona_desc() {
-  local name="$1"
-  awk -v name="$name" '
-    index($0, "<!-- persona:" name " -->") > 0 { found=1; next }
-    /<!-- \/persona -->/ { if(found) exit }
-    found { print }
-  ' "$SPARK_STATE_FILE"
-}
 
 # Handle interactive-checkpoint prompt
 if [[ "$NEXT_PHASE" == "interactive-checkpoint" ]]; then
@@ -380,16 +446,51 @@ get_constraint_for_index() {
   fi
 }
 
-if [[ "$NEXT_PHASE" == "seed" ]]; then
+if [[ "$NEXT_PHASE" == "persona_gen" ]]; then
+  # PERSONA_GEN: research a LinkedIn persona and generate a full character
+  IFS='|' read -ra GEN_IDX_ARR_PROMPT <<< "$GEN_INDICES_STR"
+  NEXT_GEN_IDX="${GEN_IDX_ARR_PROMPT[$NEXT_GEN_CURRENT]}"
+  NEXT_GEN_PERSONA="${PERSONA_NAMES[$NEXT_GEN_IDX]}"
+  NEXT_GEN_REF="${NEXT_GEN_PERSONA#linkedin:}"
+  PERSONA_GEN_PROMPT=$(cat "$PLUGIN_ROOT/prompts/phases/persona-gen.md")
+
+  FULL_PROMPT="$PERSONA_GEN_PROMPT
+
+## Person to Research
+
+> $NEXT_GEN_REF"
+
+elif [[ "$NEXT_PHASE" == "seed" ]]; then
   # SEED: persona description + seed prompt (with constraint) + topic
   # CRITICAL: NO transcript! This enforces independent generation.
   SEED_PROMPT=$(cat "$PLUGIN_ROOT/prompts/phases/seed.md")
   CONSTRAINT=$(get_constraint_for_index "$NEXT_INDEX")
   SEED_PROMPT="${SEED_PROMPT//\[INJECT_CONSTRAINT\]/$CONSTRAINT}"
 
-  FULL_PROMPT="# Persona: $NEXT_PERSONA_NAME
+  # Enhanced custom persona template
+  if [[ "$NEXT_PERSONA_NAME" == custom:* ]]; then
+    PERSONA_BLOCK="# Your Persona
 
-$NEXT_PERSONA_DESC
+You are embodying a unique character for this brainstorming session.
+Fully inhabit this persona based on the following seed:
+
+> $NEXT_PERSONA_DESC
+
+Build your character completely:
+- What is your fundamental worldview?
+- What vocabulary, metaphors, and thinking patterns come naturally to you?
+- What do you focus on that others might miss?
+- What are your blind spots and biases?
+
+Stay in character throughout. Every idea should feel like it could only
+come from someone with YOUR specific background and worldview."
+  else
+    PERSONA_BLOCK="# Persona: $NEXT_PERSONA_NAME
+
+$NEXT_PERSONA_DESC"
+  fi
+
+  FULL_PROMPT="$PERSONA_BLOCK
 
 ---
 
@@ -413,9 +514,30 @@ elif [[ "$NEXT_PHASE" == "cross" ]]; then
   # CROSS: persona description + cross-pollinate prompt + topic + FULL transcript
   CROSS_PROMPT=$(cat "$PLUGIN_ROOT/prompts/phases/cross-pollinate.md")
 
-  FULL_PROMPT="# Persona: $NEXT_PERSONA_NAME
+  # Enhanced custom persona template for cross phase
+  if [[ "$NEXT_PERSONA_NAME" == custom:* ]]; then
+    PERSONA_BLOCK="# Your Persona
 
-$NEXT_PERSONA_DESC
+You are embodying a unique character for this brainstorming session.
+Fully inhabit this persona based on the following seed:
+
+> $NEXT_PERSONA_DESC
+
+Build your character completely:
+- What is your fundamental worldview?
+- What vocabulary, metaphors, and thinking patterns come naturally to you?
+- What do you focus on that others might miss?
+- What are your blind spots and biases?
+
+Stay in character throughout. Every idea should feel like it could only
+come from someone with YOUR specific background and worldview."
+  else
+    PERSONA_BLOCK="# Persona: $NEXT_PERSONA_NAME
+
+$NEXT_PERSONA_DESC"
+  fi
+
+  FULL_PROMPT="$PERSONA_BLOCK
 
 ---
 
@@ -474,10 +596,14 @@ Produce the final synthesis report. Rank honestly — not everything is a 5/5."
 fi
 
 # Build system message
-if [[ "$NEXT_PHASE" == "seed" ]]; then
-  SYSTEM_MSG="Spark: SEED phase — $NEXT_PERSONA_NAME ($((NEXT_INDEX + 1)) of $PERSONA_COUNT)"
+if [[ "$NEXT_PHASE" == "persona_gen" ]]; then
+  SYSTEM_MSG="Spark: PERSONA GENERATION — researching $(display_name "$NEXT_GEN_PERSONA") ($((NEXT_GEN_CURRENT + 1)) of ${#GEN_IDX_ARR_PROMPT[@]})"
+elif [[ "$NEXT_PHASE" == "seed" ]]; then
+  NEXT_DISPLAY="$(display_name "$NEXT_PERSONA_NAME")"
+  SYSTEM_MSG="Spark: SEED phase — $NEXT_DISPLAY ($((NEXT_INDEX + 1)) of $PERSONA_COUNT)"
 elif [[ "$NEXT_PHASE" == "cross" ]]; then
-  SYSTEM_MSG="Spark: CROSS-POLLINATE phase — $NEXT_PERSONA_NAME (Round $NEXT_ROUND, $((NEXT_INDEX + 1)) of $PERSONA_COUNT)"
+  NEXT_DISPLAY="$(display_name "$NEXT_PERSONA_NAME")"
+  SYSTEM_MSG="Spark: CROSS-POLLINATE phase — $NEXT_DISPLAY (Round $NEXT_ROUND, $((NEXT_INDEX + 1)) of $PERSONA_COUNT)"
 elif [[ "$NEXT_PHASE" == "synthesize" ]]; then
   SYSTEM_MSG="Spark: SYNTHESIZE phase — produce final structured report"
 fi
